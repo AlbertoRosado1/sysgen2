@@ -1,0 +1,25 @@
+salloc -N 1 -C gpu --gpus 1 -q interactive -t 01:00:00 -L SCRATCH --account=desi_g
+
+source /global/common/software/desi/desi_environment.sh main
+source /global/common/software/desi/users/adematti/cosmodesi_environment.sh main 
+
+python forward_mocks_all.py --type ELG_LOPnotqso --survey_version v0.6 --nran 15 --mockid 0
+python cont_mocks.py --type ELG_LOPnotqso --mockid 0
+python prepare_contaminated_mocks.py --type ELG_LOP_complete_gtlimaging --survey_version v0.6 --nran 15 --mockid 0
+
+
+Workflow:
+
+salloc -N 1 -C gpu --gpus 1 -q interactive -t 04:00:00 -L SCRATCH --account=desi_g
+# Need to use gpu constraint because of some torch error when loading (when using sysnetdev), 
+# it says default must be set to cpu
+bash run_contaminate.sh ELG_LOPnotqso # runs forward_mocks_all.py and cont_mocks.py
+
+salloc -N 1 -C cpu -q interactive -t 04:00:00 -L SCRATCH
+bash run_pk.sh ELG_LOP_complete_gtlimaging # calculates clean and contaminated pk
+bash run_xi.sh ELG_LOP_complete_gtlimaging # calculates clean and contaminated xi
+
+
+
+others:
+# before running script do: chmod u+x ./script.sh
