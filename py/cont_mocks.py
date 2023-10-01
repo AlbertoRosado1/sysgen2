@@ -92,13 +92,8 @@ print(tp,zrl)
 
 # load data
 for reg in ['NGC','SGC']:
-    if tp=='ELG_LOPnotqso':
-        tp_="ELG_LOP"
-        dfn   = os.path.join(mockdir,f"mock{mockid}",f"{tp_}_complete_gtlimaging_{reg}_clustering.dat.fits")
-        outfn = os.path.join(outdir,f"mock{mockid}",f"{tp_}_complete_gtlimaging_{reg}_clustering.dat.fits")
-    else:
-        dfn   = os.path.join(mockdir,f"mock{mockid}",f"{tp}_complete_gtlimaging_{reg}_clustering.dat.fits")  
-        outfn = os.path.join(outdir,f"mock{mockid}",f"{tp}_complete_gtlimaging_{reg}_clustering.dat.fits")
+    dfn   = os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_clustering.dat.fits")  
+    outfn = os.path.join(outdir,f"mock{mockid}",f"{tp}_{reg}_clustering.dat.fits")
     print(dfn)
     dat = Table.read(dfn)
     dat['WEIGHT_SNCONT'] = np.ones(len(dat))
@@ -115,11 +110,7 @@ for reg in ['NGC','SGC']:
     
 # load randoms, at the moment the values in WEIGHT_SNCONT are only 1
 for reg in ['NGC','SGC']:
-    if tp=='ELG_LOPnotqso':
-        tp_="ELG_LOP"
-        rfn_l = glob(os.path.join(mockdir,f"mock{mockid}",f"{tp_}_complete_gtlimaging_{reg}_*_clustering.ran.fits"))
-    else:
-        rfn_l = glob(os.path.join(mockdir,f"mock{mockid}",f"{tp}_complete_gtlimaging_{reg}_*_clustering.ran.fits"))
+    rfn_l = glob(os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_*_clustering.ran.fits"))
     #print(rfn_l)
     for rfn in rfn_l:
         ran = Table.read(rfn) 

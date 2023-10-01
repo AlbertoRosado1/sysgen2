@@ -1,7 +1,7 @@
 # script to generate SYSNet weights for 2dgen mocks. The models used in this script are the same used to 
 # generate the WEIGHT_SN weights in the catalogs. 1 model per mock.
 # example to run 
-# python forward_mocks_all.py --type LRG --survey_version v0.6 --nran 15 --mockid 5
+# python forward_mocks_all.py --type ELG_LOP_complete_gtlimaging --survey_version v0.6 --nran 15 --mockid 5
 
 import os
 import numpy as np
@@ -111,11 +111,7 @@ datl = []
 datn = []
 dats = []
 for reg in ['NGC','SGC']:
-    if tp=='ELG_LOPnotqso':
-        tp_="ELG_LOP"
-        dfn = os.path.join(mockdir,f"mock{mockid}",f"{tp_}_complete_gtlimaging_{reg}_clustering.dat.fits")
-    else:
-        dfn = os.path.join(mockdir,f"mock{mockid}",f"{tp}_complete_gtlimaging_{reg}_clustering.dat.fits")  
+    dfn = os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_clustering.dat.fits")  
     print(dfn)
     dat = fitsio.read(dfn)
     #zgood = (dat['Z'] > zmin) & (dat['Z'] < zmax)
@@ -136,11 +132,7 @@ ranl = []
 rands_n = []
 rands_s = []
 for reg in ['NGC','SGC']:
-    if tp=='ELG_LOPnotqso':
-        tp_="ELG_LOP"
-        rfn_l = [os.path.join(mockdir,f"mock{mockid}",f"{tp_}_complete_gtlimaging_{reg}_{i}_clustering.ran.fits") for i in range(0,nran)]
-    else:
-        rfn_l = [os.path.join(mockdir,f"mock{mockid}",f"{tp}_complete_gtlimaging_{reg}_{i}_clustering.ran.fits") for i in range(0,nran)]
+    rfn_l = [os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_{i}_clustering.ran.fits") for i in range(0,nran)]
     #print(rfn_l)
     for rfn in rfn_l:
         ran = fitsio.read(rfn, columns=['RA', 'DEC']) 
