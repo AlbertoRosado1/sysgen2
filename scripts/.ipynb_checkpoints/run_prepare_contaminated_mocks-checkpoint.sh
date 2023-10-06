@@ -9,7 +9,7 @@ version=$2 # survey version to get hpmaps from
 nran=$3 # number of randoms to use 
 pydir=$HOME/sysgen2/py
 
-start_idx=1
+start_idx=0
 end_idx=24
 
 for (( VARIABLE=$start_idx; VARIABLE<=$end_idx; VARIABLE++ ))

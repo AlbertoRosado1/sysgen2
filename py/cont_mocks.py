@@ -38,7 +38,8 @@ def extrapolate_weights(datapix, wt_map, k=1, der=0):
     
     return x_new, y_new
 
-def sn_cont_wts(data, sn, normalize=False, plot_weights=False):
+def use_sn_wts(data, sn, normalize=False, plot_weights=False, clip=False):
+    # sn is hpmap with nn-weights
     dpixs = sysnet_tools.radec2hpix(nside,data['RA'],data['DEC'])
     is_unseen = sn[dpixs] == hp.UNSEEN
     print('unseen values: ', is_unseen.sum())
@@ -55,8 +56,13 @@ def sn_cont_wts(data, sn, normalize=False, plot_weights=False):
             plt.show()
     #print(dpixs,sn[dpixs])
     print(np.mean(sn[dpixs]),np.median(sn[dpixs]))
-    if normalize: wts = sn[dpixs]/np.median(sn[dpixs])
-    else: wts = sn[dpixs]
+    if normalize: 
+        wts = sn[dpixs]/np.median(sn[dpixs])
+    else: 
+        wts = sn[dpixs]
+    if clip: 
+        print(f"clipping SYSNet predictions")
+        wts = wts.clip(0.5,2.0)
     print('sn_wts min/max: ',wts.min(),',',wts.max())
     return wts
 
@@ -66,6 +72,8 @@ parser.add_argument("--type", help="tracer type to be selected")
 parser.add_argument("--mockdir", help="base mock directory for input",default="/pscratch/sd/a/arosado/SecondGenMocks/AbacusSummit/")
 parser.add_argument("--imsys_nside",help="healpix nside used for imaging systematic regressions",default=256,type=int)
 parser.add_argument("--outdir", help="directory for output",default="/pscratch/sd/a/arosado/SecondGenMocks/AbacusSummit/")
+parser.add_argument("--clip_snwts", help="clip SYSNet predictions",choices=['y','n'],default="y")
+parser.add_argument("--do_randoms", help="add column of NN weights as ones",choices=['y','n'],default="y")
 opt = parser.parse_args()
 print(opt)
 
@@ -73,6 +81,16 @@ print(opt)
 tp = opt.type # tracer type ['ELG_LPOnotqso','LRG','QSO]
 mockid = opt.mockid
 nside = opt.imsys_nside
+clip_snwts = opt.clip_snwts
+if clip_snwts=='y':
+    clip = True
+else:
+    clip = False
+do_randoms = opt.do_randoms
+if do_randoms=='y':
+    do_randoms=True
+else:
+    do_randoms=False
 
 # directories
 mockdir =  opt.mockdir 
@@ -103,19 +121,21 @@ for reg in ['NGC','SGC']:
         print('\t',zmin,zmax)
         zgood = (zmin < dat['Z']) & (dat['Z'] < zmax)
         sn_fn = os.path.join(prep_mockdir,f"nn-weights_{tp}{zw}_NS.fits")
-        sn_wts = hp.read_map(sn_fn) 
-        dat['WEIGHT_SNCONT'][zgood] = sn_cont_wts(dat[zgood],sn_wts,normalize=True,plot_weights=False)
+        sn_map = hp.read_map(sn_fn) 
+        sn_wts = use_sn_wts(dat[zgood],sn_map,normalize=True,plot_weights=False,clip=clip)
+        dat['WEIGHT_SNCONT'][zgood] = sn_wts
     print(f"saving {outfn}")
     dat.write(outfn,overwrite=True)
     
 # load randoms, at the moment the values in WEIGHT_SNCONT are only 1
-for reg in ['NGC','SGC']:
-    rfn_l = glob(os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_*_clustering.ran.fits"))
-    #print(rfn_l)
-    for rfn in rfn_l:
-        ran = Table.read(rfn) 
-        ran['WEIGHT_SNCONT'] = np.ones(len(ran))
-        
-        outfn = os.path.join(outdir,f"mock{mockid}",rfn.split('/')[-1])
-        print(f"saving {outfn}")
-        ran.write(outfn,overwrite=True)
+if do_randoms:
+    for reg in ['NGC','SGC']:
+        rfn_l = glob(os.path.join(mockdir,f"mock{mockid}",f"{tp}_{reg}_*_clustering.ran.fits"))
+        #print(rfn_l)
+        for rfn in rfn_l:
+            ran = Table.read(rfn) 
+            ran['WEIGHT_SNCONT'] = np.ones(len(ran))
+
+            outfn = os.path.join(outdir,f"mock{mockid}",rfn.split('/')[-1])
+            print(f"saving {outfn}")
+            ran.write(outfn,overwrite=True)

@@ -2,7 +2,7 @@
 #SBATCH -N 2
 #SBATCH -C cpu
 #SBATCH -q regular
-#SBATCH -J Y1mocks_sysnet
+#SBATCH -J sysnet_Y1mocks
 #SBATCH -t 3:00:00
 #SBATCH -L SCRATCH
 #SBATCH -o slurm_outputs/%A_%a.out

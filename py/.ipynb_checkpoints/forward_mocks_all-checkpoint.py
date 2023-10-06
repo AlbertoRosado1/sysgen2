@@ -56,7 +56,7 @@ def do_forward(checkpoints,templates,outfn,axes=[1, 2, 3, 4, 5, 6, 7, 8]):
     nnw_mean = np.mean(nnw_list,axis=0)    
     #print(nnw_mean)
     dt = Table([hpix, nnw_mean], names=['hpix', 'weight'])
-    dt.write(outfn, format='fits')
+    dt.write(outfn, format='fits',overwrite=True)
     print(f'save in {outfn}')
 
 parser = argparse.ArgumentParser()
@@ -196,7 +196,11 @@ for zl in zrl:
     for reg in ['N','S']:
         print(reg)
         outfn = os.path.join(prep_mockdir,f"nn-weights_{tp}{zw}_{reg}.fits")
-        nndir   = os.path.join(sysdir,f"{tp}{zw}_{reg}/")
+        if tp[:3] == 'ELG':
+            tp_ = 'ELG_LOPnotqso'
+        else:
+            tp_ = tp[:3]
+        nndir   = os.path.join(sysdir,f"{tp_}{zw}_{reg}/")
         chcks   = [sorted(glob(nndir+'model_*/best.pth.tar'))[mockid]]
         print(f"using model {chcks} for mock {mockid}")
         templates = fitsio.read(prep_mockdir+f"/prep_{tp}{zw}_{reg}.fits")
@@ -221,5 +225,5 @@ for zl in zrl:
     is_good = count_i > 0.0
     wind_i[is_good] = wind_i[is_good] / count_i[is_good]
     wind_i[~is_good] = hp.UNSEEN
-    hp.write_map(output_path, wind_i, dtype=np.float64, fits_IDL=False) 
+    hp.write_map(output_path, wind_i, dtype=np.float64, fits_IDL=False, overwrite=True) 
     print(f"saved {output_path}")
